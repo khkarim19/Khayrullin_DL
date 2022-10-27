@@ -11,15 +11,15 @@ class DatasetType(Enum):
     test = 'test'
 
 
-class Dataset:
+class MNIST_Dataset:
     def __init__(self, dataset_type: DatasetType, transforms: List[Callable], num_classes: int,
                  dataset_path='./mnist',
                  image_file_name="train-images.idx3-ubyte",
                  label_file_name="train-labels.idx1-ubyte"):
         self.__dataset_path = dataset_path
         self.__dataset_type = dataset_type
-        self.__image_file_name = image_file_name
-        self.__label_file_name = label_file_name
+        self.__images_file = image_file_name
+        self.__labels_file = label_file_name
         self.__labels = []
         self.__images = []
         self.__transforms = transforms
@@ -47,21 +47,31 @@ class Dataset:
         :return: one-hot encoding вектор
         """
         res = []
-        if (abs(label)> self.__num_classes):
+        if (abs(label) > self.__num_classes):
             raise ValueError('В датасете нет такого класса')
+        for i in range(0, self.__num_classes):
+            if (label == i):
+                res.append(1)
+            else:
+                res.append(0)
+        return res
 
     def __getitem__(self, idx):
         """
         :param idx: индекс элемента в выборке
         :return: preprocessed image and label
         """
-        images = self.images[idx]
-        labels = self.labels[idx]
-        for transform in self.transforms:
+        images = self.__images[idx]
+        labels = self.__labels[idx]
+        for transform in self.__transforms:
             images = transform(images)
         return images, labels
 
     def show_statistics(self):
+        """
+         Необходимо вывести количество элементов в датасете, количество классов и количество элементов в каждом классе
+        """
         unique, counts = np.unique(self.__labels, return_counts=True)
-        print(
-            f'Датасет - {self.__dataset_type.name} \nКоличество элементов в датасете: {self.__len__()} \nКоличество классов: {self.__nrof_classes} \n{dict(zip(unique, counts))}\n')
+        print(f'Количество элементов в датасете: {self.__len__()}')
+        print(f'Количество классов: {self.__num_classes}')
+        print(f'Количество элементов в каждом классе : {dict(zip(unique, counts))}')
